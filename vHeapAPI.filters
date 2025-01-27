@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="vHeap">
+      <UniqueIdentifier>{430ea99a-9263-4ea3-b2ee-0a2b7faaab7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vHeap\nHeap">
+      <UniqueIdentifier>{684232d7-f629-4fe2-ace2-c1ca06892e8f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vHeap\vHeap.cpp">
+      <Filter>vHeap</Filter>
+    </ClCompile>
+    <ClCompile Include="vHeap\nHeap\nHeap.cpp">
+      <Filter>vHeap\nHeap</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vHeap\vHeap.h">
+      <Filter>vHeap</Filter>
+    </ClInclude>
+    <ClInclude Include="vHeap\nHeap\nHeap.h">
+      <Filter>vHeap\nHeap</Filter>
+    </ClInclude>
+    <ClInclude Include="vHeap\nHeap\nHeapConfig.h">
+      <Filter>vHeap\nHeap</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
