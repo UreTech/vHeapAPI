@@ -81,13 +81,18 @@ namespace vhp {
 				bool isClientAlreadyConnected(ClientInfo clInfo);
 
 				// client
+				bool isConnectedToServer = false;
 				SOCKET udpSocket;
 				sockaddr_in serverAddr;
 				expectedPacket svData;
+				std::chrono::steady_clock::time_point serverLastResponse = std::chrono::high_resolution_clock::now();
 				void serverListenThread();
 				void serverHandler(Packet pk);
 
 			public:
+				//common
+				nhpMode getMode();
+
 				//server
 				bool initServer(uint16_t port);
 				void stopServer();

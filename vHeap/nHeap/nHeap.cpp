@@ -124,13 +124,23 @@ bool vhp::v120::nhp::nHeap_RuntimeClass::isClientAlreadyConnected(ClientInfo clI
 void vhp::v120::nhp::nHeap_RuntimeClass::serverListenThread()
 {
     while (1) {
-        Packet receivePacket;
-        int fromAddrSize = sizeof(serverAddr);
-        int bytesReceived = recvfrom(udpSocket, (char*)&receivePacket, sizeof(Packet), 0, (sockaddr*)&serverAddr, &fromAddrSize);
-        if (bytesReceived > 0) {
-            serverHandler(receivePacket);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - serverLastResponse);
+        if (duration.count() < TIMEOUT_VALUE_MS) {
+            Packet receivePacket;
+            int fromAddrSize = sizeof(serverAddr);
+            int bytesReceived = recvfrom(udpSocket, (char*)&receivePacket, sizeof(Packet), 0, (sockaddr*)&serverAddr, &fromAddrSize);
+            if (bytesReceived > 0) {
+                serverHandler(receivePacket);
+                serverLastResponse = std::chrono::high_resolution_clock::now();
+            }
+        }
+        else {
+            LOG_WARN("Server timeout!");
+            this->disconnect();
+            break;
         }
     }
+    LOG_INFO("Server thread out.");
 }
 
 void vhp::v120::nhp::nHeap_RuntimeClass::serverHandler(Packet pk)
@@ -162,6 +172,11 @@ void vhp::v120::nhp::nHeap_RuntimeClass::serverHandler(Packet pk)
         exP->data.clear();
         LOG_INFO("data:" << std::string((char*)exP->Readydata.data(), exP->Readydata.size()));
     }
+}
+
+vhp::v120::nhp::nhpMode vhp::v120::nhp::nHeap_RuntimeClass::getMode()
+{
+    return mode;
 }
 
 bool vhp::v120::nhp::nHeap_RuntimeClass::initServer(uint16_t port)
@@ -275,6 +290,8 @@ bool vhp::v120::nhp::nHeap_RuntimeClass::initClient(std::string ip, uint16_t por
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 
+    mode = n_client;
+
     std::thread t(&nHeap_RuntimeClass::serverListenThread, this);
     t.detach();
     LOG_INFO("serverListen thread started.");
@@ -291,29 +308,34 @@ void vhp::v120::nhp::nHeap_RuntimeClass::disconnect()
 
 void vhp::v120::nhp::nHeap_RuntimeClass::sendToServer(uint8_t* data, size_t size)
 {
-    uint64_t packetCount = 0;
-    while (MAX_PACKET_SIZE <= size - (MAX_PACKET_SIZE * packetCount)) {
+    if (mode == n_client) {
+        uint64_t packetCount = 0;
+        while (MAX_PACKET_SIZE <= size - (MAX_PACKET_SIZE * packetCount)) {
+            packetCount++;
+        }
         packetCount++;
+
+        Packet pk;
+        pk.totalPackets = packetCount;
+        uint32_t lastPacketSize = size % MAX_PACKET_SIZE;
+
+        for (uint64_t i = 0; i < packetCount; i++) {
+            pk.clearData();
+            pk.packetId = i;
+            if (i != packetCount - 1) {
+                pk.size = MAX_PACKET_SIZE;
+            }
+            else {
+                pk.size = lastPacketSize;
+            }
+            memcpy(pk.packetData, (data + (i * MAX_PACKET_SIZE)), pk.size);
+            if (sendto(udpSocket, (char*)&pk, sizeof(Packet), 0, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+                LOG_WARN("sendto failed: " + std::to_string(WSAGetLastError()));
+            }
+        }
     }
-    packetCount++;
-
-    Packet pk;
-    pk.totalPackets = packetCount;
-    uint32_t lastPacketSize = size % MAX_PACKET_SIZE;
-
-    for (uint64_t i = 0; i < packetCount; i++) {
-        pk.clearData();
-        pk.packetId = i;
-        if (i != packetCount - 1) {
-            pk.size = MAX_PACKET_SIZE;
-        }
-        else {
-            pk.size = lastPacketSize;
-        }
-        memcpy(pk.packetData, (data + (i * MAX_PACKET_SIZE)), pk.size);
-        if (sendto(udpSocket, (char*)&pk, sizeof(Packet), 0, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            LOG_WARN("sendto failed: " + std::to_string(WSAGetLastError()));
-        }
+    else {
+        LOG_ERROR("Not connected to any server...");
     }
 }
 
